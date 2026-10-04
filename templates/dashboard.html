@@ -6,6 +6,21 @@
     <p>What do you need today?</p>
 </div>
 
+{% if notifications %}
+<section class="notifs-section">
+    <h2>Notifications</h2>
+    {% for n in notifications %}
+    <div class="notif-card">
+        <strong>{{ n.title }}</strong>
+        <p style="white-space:pre-wrap">{{ n.body }}</p>
+    </div>
+    {% endfor %}
+    <form method="POST" action="{{ url_for('mark_notifications_read') }}">
+        <button type="submit" class="btn-small">Mark all as read</button>
+    </form>
+</section>
+{% endif %}
+
 <div class="action-grid">
     <a href="{{ url_for('check') }}" class="action-card">
         <div class="action-icon">🔍</div>
@@ -17,10 +32,10 @@
         <h3>FIND A BUDDY</h3>
         <p>Someone to come with you to a viewing</p>
     </a>
-    <a href="#upcoming" class="action-card">
-        <div class="action-icon">✅</div>
-        <h3>VERIFY</h3>
-        <p>Open checklist for an upcoming viewing</p>
+    <a href="{{ url_for('schedule') }}" class="action-card">
+        <div class="action-icon">📅</div>
+        <h3>SCHEDULE</h3>
+        <p>Your planned viewings & calendar</p>
     </a>
 </div>
 
@@ -34,15 +49,23 @@
                     <div class="request-location">📍 {{ r.location }}</div>
                     <div class="request-meta">{{ r.date }} · {{ r.time }} · {{ r.reward }} PLN</div>
                     {% if r.buddy_name %}
-                        <div class="request-buddy">Buddy: <strong>{{ r.buddy_name }}</strong> ✓</div>
+                        <div class="request-buddy">Buddy: <strong>{{ r.buddy_name }}</strong>
+                            {% if r.match_status == 'pending' %} (waiting for confirmation){% endif %}
+                            {% if r.match_status == 'confirmed' %} ✓{% endif %}
+                        </div>
                     {% else %}
                         <div class="request-buddy pending">Waiting for match...</div>
                     {% endif %}
                 </div>
                 <div class="request-actions">
-                    <span class="status-badge status-{{ r.status }}">{{ r.status }}</span>
-                    {% if r.status == 'matched' %}
+                    <span class="status-badge status-{{ r.match_status or r.status }}">{{ r.match_status or r.status }}</span>
+                    {% if r.match_status == 'pending' and r.match_id %}
+                        <a href="{{ url_for('waiting', match_id=r.match_id) }}" class="btn-small primary">Waiting page</a>
+                        <a href="{{ url_for('chat', match_id=r.match_id) }}" class="btn-small">Chat</a>
+                    {% elif r.match_status == 'confirmed' %}
                         <a href="{{ url_for('verify', request_id=r.id) }}" class="btn-small primary">Open checklist</a>
+                        <a href="{{ url_for('chat', match_id=r.match_id) }}" class="btn-small">Chat</a>
+                        <a href="{{ url_for('cancel_meeting', match_id=r.match_id) }}" class="btn-small">Cancel</a>
                     {% endif %}
                 </div>
             </div>

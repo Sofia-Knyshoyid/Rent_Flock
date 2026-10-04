@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Cancel meeting{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Cancel meeting</h1>
+    <p>{{ request_obj.location }} · {{ request_obj.date }} at {{ request_obj.time }}</p>
+</div>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <p style="margin-bottom:1.2rem;color:var(--text-muted)">
+            The other person will be notified. Please provide a short reason (min. 10 characters).
+        </p>
+        <form method="POST">
+            <div class="form-group">
+                <label for="reason">Reason</label>
+                <textarea id="reason" name="reason" rows="4" required minlength="10"
+                    placeholder="I needed to deal with something unexpected…"></textarea>
+            </div>
+            <button type="submit" class="btn primary full">Confirm cancellation</button>
+            <a href="{{ url_for('dashboard') if user.role == 'renter' else url_for('buddy_dashboard') }}"
+               class="btn outline full" style="margin-top:0.6rem">Go back</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

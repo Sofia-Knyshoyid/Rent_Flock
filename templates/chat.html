@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Chat with {{ other_name }}</h1>
+    <p>{{ request_obj.location }} · {{ request_obj.date }} {{ request_obj.time }}</p>
+</div>
+
+<div class="chat-page">
+    <div class="chat-box large">
+        <div class="chat-messages" id="chat-messages">
+            {% for m in messages %}
+            <div class="chat-msg {% if m.is_me %}me{% else %}them{% endif %}">
+                <div class="chat-bubble">
+                    <span class="chat-sender">{{ m.sender_name }}</span>
+                    <p>{{ m.content }}</p>
+                    <span class="chat-time">{{ m.created_at }}</span>
+                </div>
+            </div>
+            {% else %}
+            <p class="chat-empty">No messages yet. Say hello!</p>
+            {% endfor %}
+        </div>
+        <form method="POST" action="{{ url_for('chat', match_id=match.id) }}" class="chat-form">
+            <input type="text" name="content" placeholder="Type a message…" required autocomplete="off">
+            <button type="submit" class="btn primary">Send</button>
+        </form>
+    </div>
+    <div class="chat-sidebar">
+        <a href="{{ url_for('schedule') }}" class="btn outline full">← Back to Schedule</a>
+        {% if match.status == 'confirmed' %}
+            <a href="{{ url_for('verify', request_id=request_obj.id) }}" class="btn primary full">Open checklist</a>
+        {% endif %}
+        {% if match.status in ['confirmed', 'pending'] %}
+            <a href="{{ url_for('cancel_meeting', match_id=match.id) }}" class="btn-small full" style="margin-top:0.5rem">Cancel meeting</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const matchId = {{ match.id }};
+    const chatBox = document.getElementById('chat-messages');
+    setInterval(async () => {
+        try {
+            const res = await fetch('/chat/' + matchId + '/messages');
+            const msgs = await res.json();
+            if (!Array.isArray(msgs)) return;
+            let html = '';
+            if (msgs.length === 0) {
+                html = '<p class="chat-empty">No messages yet. Say hello!</p>';
+            } else {
+                msgs.forEach(m => {
+                    html += '<div class="chat-msg ' + (m.is_me ? 'me' : 'them') + '">' +
+                        '<div class="chat-bubble"><span class="chat-sender">' + m.sender_name + '</span>' +
+                        '<p>' + m.content + '</p><span class="chat-time">' + m.created_at + '</span></div></div>';
+                });
+            }
+            chatBox.innerHTML = html;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } catch (e) {}
+    }, 4000);
+})();
+</script>
+{% endblock %}

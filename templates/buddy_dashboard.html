@@ -12,8 +12,23 @@
     </div>
 </div>
 
+{% if notifications %}
+<section class="notifs-section">
+    <h2>Notifications</h2>
+    {% for n in notifications %}
+    <div class="notif-card">
+        <strong>{{ n.title }}</strong>
+        <p>{{ n.body }}</p>
+    </div>
+    {% endfor %}
+    <form method="POST" action="{{ url_for('mark_notifications_read') }}">
+        <button type="submit" class="btn-small">Mark all as read</button>
+    </form>
+</section>
+{% endif %}
+
 <section class="open-requests">
-    <h2>Available nearby requests</h2>
+    <h2>Available & pending requests</h2>
     {% if open_requests %}
         <div class="request-list">
             {% for r in open_requests %}
@@ -23,11 +38,23 @@
                     <div class="request-meta">{{ r.date }} · {{ r.time }} · ~{{ r.duration }} min</div>
                     <div class="request-reward">💰 {{ r.reward }} PLN</div>
                     {% if r.notes %}<div class="request-notes">{{ r.notes }}</div>{% endif %}
+                    <div class="request-buddy">From: {{ r.renter_name }}</div>
                 </div>
                 <div class="request-actions">
-                    <form method="POST" action="{{ url_for('accept_request', request_id=r.id) }}">
-                        <button type="submit" class="btn primary">Accept</button>
-                    </form>
+                    {% if r.type == 'pending' %}
+                        <span class="status-badge status-open">needs your confirmation</span>
+                        <form method="POST" action="{{ url_for('buddy_confirm', match_id=r.match_id) }}" style="display:inline">
+                            <button type="submit" class="btn primary">Confirm</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('buddy_decline', match_id=r.match_id) }}" style="display:inline">
+                            <button type="submit" class="btn outline">Decline</button>
+                        </form>
+                        <a href="{{ url_for('chat', match_id=r.match_id) }}" class="btn-small">Chat</a>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('accept_request', request_id=r.id) }}">
+                            <button type="submit" class="btn primary">Accept</button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -52,7 +79,13 @@
                 </div>
                 <div class="request-actions">
                     <span class="status-badge status-{{ m.status }}">{{ m.status }}</span>
-                    <a href="{{ url_for('verify', request_id=m.request_id) }}" class="btn-small primary">Open checklist</a>
+                    {% if m.status == 'confirmed' %}
+                        <a href="{{ url_for('verify', request_id=m.request_id) }}" class="btn-small primary">Open checklist</a>
+                    {% endif %}
+                    <a href="{{ url_for('chat', match_id=m.match_id) }}" class="btn-small">Chat</a>
+                    {% if m.status in ['confirmed', 'pending'] %}
+                        <a href="{{ url_for('cancel_meeting', match_id=m.match_id) }}" class="btn-small">Cancel</a>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}

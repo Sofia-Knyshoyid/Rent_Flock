@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Waiting for confirmation{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Got a match!</h1>
+    <p>Waiting for <strong>{{ buddy.name }}</strong> to confirm…</p>
+</div>
+
+<div class="waiting-layout">
+    <div class="waiting-left">
+        <div class="buddy-card featured">
+            <div class="buddy-avatar">{{ buddy.name[0] }}</div>
+            <div class="buddy-info">
+                <h3>{{ buddy.name }}</h3>
+                <div class="buddy-badges">
+                    <span class="badge verified">✓ Verified</span>
+                    <span class="badge rating">⭐ {{ buddy.rating }}</span>
+                </div>
+                <div class="buddy-stats">
+                    <span>{{ buddy.completed_viewings }} viewings</span>
+                    <span>{{ buddy.attendance_rate }}% attendance</span>
+                    <span>📍 {{ buddy.neighborhood }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="match-details">
+            <p><strong>📍</strong> {{ request_obj.location }}</p>
+            <p><strong>🕐</strong> {{ request_obj.date }} · {{ request_obj.time }}</p>
+            <p><strong>⏱</strong> ~{{ request_obj.duration }} min</p>
+            <p><strong>💰</strong> {{ request_obj.reward }} PLN</p>
+        </div>
+
+        <div class="waiting-status" id="waiting-status">
+            {% if match.status == 'pending' %}
+                <div class="status-pending">
+                    <div class="spinner"></div>
+                    <p>Wait for confirmation please…</p>
+                    <p class="timer" id="timer">{{ remaining_seconds // 60 }}:{{ '%02d' % (remaining_seconds % 60) }}</p>
+                </div>
+            {% elif match.status == 'confirmed' %}
+                <div class="status-confirmed">
+                    <p>🎉 {{ buddy.name }} confirmed!</p>
+                    <a href="{{ url_for('verify', request_id=request_obj.id) }}" class="btn primary">Open checklist</a>
+                    <a href="{{ url_for('chat', match_id=match.id) }}" class="btn secondary">Open chat</a>
+                </div>
+            {% else %}
+                <div class="status-expired">
+                    <p>This match is no longer active.</p>
+                    <a href="{{ url_for('buddy') }}" class="btn primary">Find another buddy</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="waiting-actions">
+            <form method="POST" action="{{ url_for('wait_more', match_id=match.id) }}" style="display:inline">
+                <button type="submit" class="btn outline">Wait some more</button>
+            </form>
+            <form method="POST" action="{{ url_for('rematch', match_id=match.id) }}" style="display:inline">
+                <button type="submit" class="btn secondary">Look for another</button>
+            </form>
+            <form method="POST" action="{{ url_for('cancel_waiting', match_id=match.id) }}" style="display:inline">
+                <button type="submit" class="btn-small">Cancel matching</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="waiting-right">
+        <div class="chat-box">
+            <h3>Chat with {{ buddy.name }}</h3>
+            <div class="chat-messages" id="chat-messages">
+                {% for m in messages %}
+                <div class="chat-msg {% if m.is_me %}me{% else %}them{% endif %}">
+                    <div class="chat-bubble">
+                        <span class="chat-sender">{{ m.sender_name }}</span>
+                        <p>{{ m.content }}</p>
+                        <span class="chat-time">{{ m.created_at }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <p class="chat-empty">Say hi! Ask if they can make it.</p>
+                {% endfor %}
+            </div>
+            <form method="POST" action="{{ url_for('chat', match_id=match.id) }}" class="chat-form">
+                <input type="hidden" name="next" value="{{ url_for('waiting', match_id=match.id) }}">
+                <input type="text" name="content" placeholder="Type a message…" required autocomplete="off">
+                <button type="submit" class="btn primary">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Timeout modal -->
+<div class="modal-overlay" id="timeout-modal" style="display:none">
+    <div class="modal">
+        <h2>Your buddy doesn’t seem to be available at the moment 🙁</h2>
+        <p>Do you want to wait some more, or look for another buddy?</p>
+        <div class="modal-actions">
+            <form method="POST" action="{{ url_for('wait_more', match_id=match.id) }}">
+                <button type="submit" class="btn outline">Wait some more (3 min)</button>
+            </form>
+            <form method="POST" action="{{ url_for('rematch', match_id=match.id) }}">
+                <button type="submit" class="btn secondary">Look for another</button>
+            </form>
+            <form method="POST" action="{{ url_for('cancel_waiting', match_id=match.id) }}">
+                <button type="submit" class="btn-small">Cancel matching</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    const matchId = {{ match.id }};
+    const statusEl = document.getElementById('waiting-status');
+    const timerEl = document.getElementById('timer');
+    const modal = document.getElementById('timeout-modal');
+    let remaining = {{ remaining_seconds }};
+    let currentStatus = "{{ match.status }}";
+
+    function formatTime(s) {
+        const m = Math.floor(s / 60);
+        const sec = s % 60;
+        return m + ':' + String(sec).padStart(2, '0');
+    }
+
+    function tick() {
+        if (currentStatus !== 'pending') return;
+        remaining = Math.max(0, remaining - 1);
+        if (timerEl) timerEl.textContent = formatTime(remaining);
+        if (remaining <= 0) {
+            modal.style.display = 'flex';
+        }
+    }
+
+    // Countdown every second
+    setInterval(tick, 1000);
+
+    // Poll status every 4s
+    setInterval(async () => {
+        try {
+            const res = await fetch('/waiting/' + matchId + '/status');
+            const data = await res.json();
+            if (data.status && data.status !== currentStatus) {
+                currentStatus = data.status;
+                if (data.status === 'confirmed') {
+                    statusEl.innerHTML = '<div class="status-confirmed"><p>🎉 Buddy confirmed!</p>' +
+                        '<a href="/verify/{{ request_obj.id }}" class="btn primary">Open checklist</a> ' +
+                        '<a href="/chat/' + matchId + '" class="btn secondary">Open chat</a></div>';
+                    modal.style.display = 'none';
+                } else if (data.status === 'expired' || data.status === 'cancelled') {
+                    statusEl.innerHTML = '<div class="status-expired"><p>This match is no longer active.</p>' +
+                        '<a href="/buddy" class="btn primary">Find another buddy</a></div>';
+                    modal.style.display = 'none';
+                }
+            }
+            if (data.remaining_seconds !== undefined) {
+                remaining = data.remaining_seconds;
+            }
+        } catch (e) {}
+    }, 4000);
+
+    // Poll chat every 5s
+    const chatBox = document.getElementById('chat-messages');
+    setInterval(async () => {
+        try {
+            const res = await fetch('/chat/' + matchId + '/messages');
+            const msgs = await res.json();
+            if (!Array.isArray(msgs)) return;
+            let html = '';
+            if (msgs.length === 0) {
+                html = '<p class="chat-empty">Say hi! Ask if they can make it.</p>';
+            } else {
+                msgs.forEach(m => {
+                    html += '<div class="chat-msg ' + (m.is_me ? 'me' : 'them') + '">' +
+                        '<div class="chat-bubble"><span class="chat-sender">' + m.sender_name + '</span>' +
+                        '<p>' + m.content + '</p><span class="chat-time">' + m.created_at + '</span></div></div>';
+                });
+            }
+            chatBox.innerHTML = html;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        } catch (e) {}
+    }, 5000);
+})();
+</script>
+{% endblock %}

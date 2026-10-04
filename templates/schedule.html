@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Schedule{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Your schedule</h1>
+    <p>Planned viewings and buddy jobs</p>
+</div>
+
+{% if items %}
+<div class="request-list">
+    {% for item in items %}
+    <div class="request-card">
+        <div class="request-main">
+            <div class="request-location">📍 {{ item.location }}</div>
+            <div class="request-meta">{{ item.date }} · {{ item.time }} · ~{{ item.duration }} min · {{ item.reward }} PLN</div>
+            <div class="request-buddy">
+                {% if item.role == 'renter' %}
+                    Buddy: <strong>{{ item.other_name or '—' }}</strong>
+                {% else %}
+                    Helping: <strong>{{ item.other_name or '—' }}</strong>
+                {% endif %}
+            </div>
+        </div>
+        <div class="request-actions" style="flex-wrap:wrap;gap:0.5rem">
+            <span class="status-badge status-{{ item.match_status or item.status }}">{{ item.match_status or item.status }}</span>
+            {% if item.match_id %}
+                <a href="{{ url_for('chat', match_id=item.match_id) }}" class="btn-small">Chat</a>
+                {% if (item.match_status or item.status) == 'confirmed' %}
+                    <a href="{{ url_for('verify', request_id=item.match_id) }}" class="btn-small primary">Checklist</a>
+                {% endif %}
+                {% if (item.match_status or item.status) in ['confirmed', 'pending'] %}
+                    <a href="{{ url_for('cancel_meeting', match_id=item.match_id) }}" class="btn-small">Cancel</a>
+                {% endif %}
+            {% endif %}
+            <a href="{{ item.gcal }}" target="_blank" rel="noopener" class="btn-small secondary">📅 Add to Google Calendar</a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No planned viewings yet.</p>
+    {% if user.role == 'renter' %}
+        <a href="{{ url_for('buddy') }}" class="btn primary">Find a Buddy</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

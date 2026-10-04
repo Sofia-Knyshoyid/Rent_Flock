@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}RentFlock{% endblock %} — Don't rent alone</title>
+    <title>{% block title %}RentFlock{% endblock %} — Find your flock. Find your place.</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -22,6 +22,7 @@
                     {% if user.role == 'renter' %}
                         <a href="{{ url_for('buddy') }}">Buddy</a>
                     {% endif %}
+                    <a href="{{ url_for('schedule') }}">Schedule</a>
                     <span class="user-badge">{{ user.name }} · {{ user.role }}</span>
                     <a href="{{ url_for('logout') }}" class="btn-small">Logout</a>
                 {% else %}
@@ -48,9 +49,10 @@
     </main>
 
     <footer class="footer">
-        <p>RentFlock · Don't rent alone · HackYeah Demo</p>
+        <p>RentFlock · Find your flock. Find your place. · HackYeah Demo</p>
     </footer>
 
     <script src="{{ url_for('static', filename='app.js') }}"></script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>

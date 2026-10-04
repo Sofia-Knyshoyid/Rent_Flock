@@ -8,6 +8,13 @@
         · {{ request_obj.date }} {{ request_obj.time }}
         {% if buddy_name %} · with <strong>{{ buddy_name }}</strong>{% endif %}
     </p>
+    {% if match_id %}
+    <div style="margin-top:0.8rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+        <a href="{{ url_for('chat', match_id=match_id) }}" class="btn-small">Chat</a>
+        <a href="{{ url_for('cancel_meeting', match_id=match_id) }}" class="btn-small">Cancel meeting</a>
+        <a href="{{ url_for('schedule') }}" class="btn-small secondary">Schedule</a>
+    </div>
+    {% endif %}
 </div>
 
 {% if report %}

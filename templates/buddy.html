@@ -6,40 +6,6 @@
     <p>Request verified local help for your viewing.</p>
 </div>
 
-{% if match %}
-<div class="match-result">
-    <div class="match-success">
-        <div class="match-icon">🎉</div>
-        <h2>Matched!</h2>
-        <p>We found a verified buddy for you.</p>
-    </div>
-    <div class="buddy-card featured">
-        <div class="buddy-avatar">{{ match.buddy.name[0] }}</div>
-        <div class="buddy-info">
-            <h3>{{ match.buddy.name }}</h3>
-            <div class="buddy-badges">
-                <span class="badge verified">✓ Verified</span>
-                <span class="badge rating">⭐ {{ match.buddy.rating }}</span>
-            </div>
-            <div class="buddy-stats">
-                <span>{{ match.buddy.completed_viewings }} viewings</span>
-                <span>{{ match.buddy.attendance_rate }}% attendance</span>
-                <span>📍 {{ match.buddy.neighborhood }}</span>
-            </div>
-        </div>
-    </div>
-    <div class="match-details">
-        <p><strong>📍</strong> {{ match.request.location }}</p>
-        <p><strong>🕐</strong> {{ match.request.date }} · {{ match.request.time }}</p>
-        <p><strong>⏱</strong> ~{{ match.request.duration }} min</p>
-        <p><strong>💰</strong> {{ match.request.reward }} PLN</p>
-    </div>
-    <div class="match-actions">
-        <a href="{{ url_for('verify', request_id=match.request.id) }}" class="btn primary large">Open checklist</a>
-        <a href="{{ url_for('dashboard') }}" class="btn outline">Back to dashboard</a>
-    </div>
-</div>
-{% else %}
 <div class="buddy-request-form">
     <form method="POST">
         <input type="hidden" name="action" value="request">
@@ -76,9 +42,8 @@
 
     <div class="info-box">
         <h4>How matching works</h4>
-        <p>We find verified buddies nearby, rank by rating & experience, and match you in real time — like Uber, but for human help.</p>
+        <p>We find a verified buddy nearby. They must confirm within 3 minutes. You can chat while waiting.</p>
         <p class="small">Anonymous to each other. Accountable to RentFlock.</p>
     </div>
 </div>
-{% endif %}
 {% endblock %}

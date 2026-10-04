@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, Column, Integer, String, Float, Boolean, Text, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,8 +21,8 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(100), nullable=False)
     email = Column(String(120), unique=True, nullable=False)
-    role = Column(String(20), nullable=False)  # renter / buddy
-    verification_status = Column(String(20), default="unverified")  # unverified / verified
+    role = Column(String(20), nullable=False)
+    verification_status = Column(String(20), default="unverified")
     rating = Column(Float, default=5.0)
     completed_viewings = Column(Integer, default=0)
     attendance_rate = Column(Float, default=100.0)
@@ -42,10 +42,10 @@ class BuddyRequest(Base):
     location = Column(String(200), nullable=False)
     date = Column(String(50), nullable=False)
     time = Column(String(20), nullable=False)
-    duration = Column(Integer, default=30)  # minutes
+    duration = Column(Integer, default=30)
     reward = Column(Float, default=20.0)
     notes = Column(Text, default="")
-    status = Column(String(30), default="open")  # open / matched / completed / cancelled
+    status = Column(String(30), default="open")  # open / pending / matched / completed / cancelled
     created_at = Column(DateTime, default=datetime.utcnow)
 
     renter = relationship("User", back_populates="requests", foreign_keys=[renter_id])
@@ -59,11 +59,49 @@ class Match(Base):
     id = Column(Integer, primary_key=True)
     request_id = Column(Integer, ForeignKey("buddy_requests.id"), nullable=False)
     buddy_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    status = Column(String(30), default="confirmed")  # confirmed / completed / cancelled
+    status = Column(String(30), default="pending")  # pending / confirmed / cancelled / expired
     created_at = Column(DateTime, default=datetime.utcnow)
+    confirmed_at = Column(DateTime, nullable=True)
+    cancelled_by = Column(Integer, nullable=True)
+    cancel_reason = Column(Text, default="")
 
     request = relationship("BuddyRequest", back_populates="match")
     buddy = relationship("User", back_populates="matches", foreign_keys=[buddy_id])
+    messages = relationship("ChatMessage", back_populates="match", order_by="ChatMessage.created_at")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True)
+    match_id = Column(Integer, ForeignKey("matches.id"), nullable=False)
+    sender_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    match = relationship("Match", back_populates="messages")
+    sender = relationship("User")
+
+
+class BuddyIgnore(Base):
+    __tablename__ = "buddy_ignores"
+
+    id = Column(Integer, primary_key=True)
+    renter_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    buddy_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    until = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    body = Column(Text, default="")
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 class ListingAnalysis(Base):
@@ -90,57 +128,23 @@ class ViewingReport(Base):
 
 
 def init_db():
-    """Create tables and seed demo data."""
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     Base.metadata.create_all(engine)
 
     session = SessionLocal()
     try:
-        # Only seed if empty
         if session.query(User).count() == 0:
-            # Demo Renter
-            renter = User(
-                name="Anna",
-                email="anna@demo.com",
-                role="renter",
-                verification_status="verified",
-                rating=5.0,
-                neighborhood="Krowodrza"
-            )
-            # Demo Buddies
-            marta = User(
-                name="Marta",
-                email="marta@demo.com",
-                role="buddy",
-                verification_status="verified",
-                rating=4.92,
-                completed_viewings=37,
-                attendance_rate=98.0,
-                neighborhood="Krowodrza",
-                available=True
-            )
-            kuba = User(
-                name="Kuba",
-                email="kuba@demo.com",
-                role="buddy",
-                verification_status="verified",
-                rating=4.85,
-                completed_viewings=22,
-                attendance_rate=95.0,
-                neighborhood="Stare Miasto",
-                available=True
-            )
-            ola = User(
-                name="Ola",
-                email="ola@demo.com",
-                role="buddy",
-                verification_status="verified",
-                rating=4.78,
-                completed_viewings=15,
-                attendance_rate=100.0,
-                neighborhood="Podgórze",
-                available=True
-            )
+            renter = User(name="Anna", email="anna@demo.com", role="renter",
+                          verification_status="verified", rating=5.0, neighborhood="Krowodrza")
+            marta = User(name="Marta", email="marta@demo.com", role="buddy",
+                         verification_status="verified", rating=4.92, completed_viewings=37,
+                         attendance_rate=98.0, neighborhood="Krowodrza", available=True)
+            kuba = User(name="Kuba", email="kuba@demo.com", role="buddy",
+                        verification_status="verified", rating=4.85, completed_viewings=22,
+                        attendance_rate=95.0, neighborhood="Stare Miasto", available=True)
+            ola = User(name="Ola", email="ola@demo.com", role="buddy",
+                       verification_status="verified", rating=4.78, completed_viewings=15,
+                       attendance_rate=100.0, neighborhood="Podgórze", available=True)
             session.add_all([renter, marta, kuba, ola])
             session.commit()
             print("✓ Demo data seeded")
