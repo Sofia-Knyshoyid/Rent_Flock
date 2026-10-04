@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Verify{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>VERIFY</h1>
+    <p>
+        Viewing at <strong>{{ request_obj.location }}</strong>
+        · {{ request_obj.date }} {{ request_obj.time }}
+        {% if buddy_name %} · with <strong>{{ buddy_name }}</strong>{% endif %}
+    </p>
+</div>
+
+{% if report %}
+<div class="report-summary">
+    <h3>Viewing Summary</h3>
+    <p class="summary-text">{{ report.summary }}</p>
+    {% if report.notes %}
+        <p class="notes"><strong>Notes:</strong> {{ report.notes }}</p>
+    {% endif %}
+    <p class="small">Saved {{ report.created_at.strftime('%Y-%m-%d %H:%M') if report.created_at else '' }}</p>
+</div>
+{% endif %}
+
+<form method="POST" class="checklist-form">
+    <div class="checklist-section">
+        <h3>🏠 Apartment condition</h3>
+        <div class="checklist-grid">
+            <label class="check-item"><input type="checkbox" name="shower"> Shower works</label>
+            <label class="check-item"><input type="checkbox" name="kitchen"> Kitchen condition OK</label>
+            <label class="check-item"><input type="checkbox" name="appliances"> Appliances work</label>
+            <label class="check-item"><input type="checkbox" name="heating"> Heating OK / clear</label>
+            <label class="check-item"><input type="checkbox" name="windows"> Windows & light OK</label>
+            <label class="check-item"><input type="checkbox" name="ventilation"> Ventilation OK</label>
+            <label class="check-item"><input type="checkbox" name="mold"> No mold / water damage</label>
+            <label class="check-item"><input type="checkbox" name="electricity"> Electricity OK</label>
+        </div>
+    </div>
+
+    <div class="checklist-section">
+        <h3>💰 Costs & utilities</h3>
+        <div class="checklist-grid">
+            <label class="check-item"><input type="checkbox" name="rent_clear"> Rent amount clear</label>
+            <label class="check-item"><input type="checkbox" name="utilities_clear"> Utilities costs clear</label>
+            <label class="check-item"><input type="checkbox" name="meters"> Individual meters (liczniki) shown</label>
+            <label class="check-item"><input type="checkbox" name="included"> What's included is clear</label>
+        </div>
+    </div>
+
+    <div class="checklist-section">
+        <h3>📄 Documents</h3>
+        <div class="checklist-grid">
+            <label class="check-item"><input type="checkbox" name="owner_id"> Owner / agent ID shown</label>
+            <label class="check-item"><input type="checkbox" name="proof_ownership"> Proof of ownership</label>
+            <label class="check-item"><input type="checkbox" name="ksiega"> Księga wieczysta (if applicable)</label>
+        </div>
+    </div>
+
+    <div class="checklist-section">
+        <h3>💳 Payment</h3>
+        <div class="checklist-grid">
+            <label class="check-item"><input type="checkbox" name="bank_transfer"> Bank transfer possible</label>
+            <label class="check-item"><input type="checkbox" name="deposit_clear"> Deposit conditions clear</label>
+        </div>
+    </div>
+
+    <div class="checklist-section">
+        <h3>📝 Contract</h3>
+        <div class="checklist-grid">
+            <label class="check-item"><input type="checkbox" name="notice_period"> Notice period clear</label>
+            <label class="check-item"><input type="checkbox" name="early_termination"> Early termination clear</label>
+            <label class="check-item"><input type="checkbox" name="deposit_return"> Deposit return conditions clear</label>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="notes">Notes / questions still open</label>
+        <textarea id="notes" name="notes" rows="3" placeholder="Anything still unclear...">{{ report.notes if report else '' }}</textarea>
+    </div>
+
+    <button type="submit" class="btn primary large">Save checklist & generate summary</button>
+</form>
+
+<div class="info-box mt">
+    <p><strong>Remember:</strong> RentFlock doesn't tell you “safe” or “unsafe”. It helps you ask better questions before committing.</p>
+</div>
+{% endblock %}

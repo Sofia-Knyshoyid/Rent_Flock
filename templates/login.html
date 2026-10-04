@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Welcome to RentFlock</h1>
+        <p class="auth-sub">Login or create a demo account</p>
+
+        <form method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+            </div>
+            <div class="form-group">
+                <label>I am a...</label>
+                <div class="role-selector">
+                    <label class="role-option">
+                        <input type="radio" name="role" value="renter" checked>
+                        <span>Renter</span>
+                    </label>
+                    <label class="role-option">
+                        <input type="radio" name="role" value="buddy">
+                        <span>Buddy</span>
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn primary full">Continue</button>
+        </form>
+
+        <div class="demo-divider">
+            <span>or try instantly</span>
+        </div>
+        <div class="demo-buttons">
+            <a href="{{ url_for('demo_login', role='renter') }}" class="btn outline full">Demo as Renter (Anna)</a>
+            <a href="{{ url_for('demo_login', role='buddy') }}" class="btn outline full">Demo as Buddy (Marta)</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

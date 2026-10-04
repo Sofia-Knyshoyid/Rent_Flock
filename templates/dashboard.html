@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Hi {{ user.name }} 👋</h1>
+    <p>What do you need today?</p>
+</div>
+
+<div class="action-grid">
+    <a href="{{ url_for('check') }}" class="action-card">
+        <div class="action-icon">🔍</div>
+        <h3>CHECK A LISTING</h3>
+        <p>Analyze a rental listing for red flags</p>
+    </a>
+    <a href="{{ url_for('buddy') }}" class="action-card">
+        <div class="action-icon">🤝</div>
+        <h3>FIND A BUDDY</h3>
+        <p>Someone to come with you to a viewing</p>
+    </a>
+    <a href="#upcoming" class="action-card">
+        <div class="action-icon">✅</div>
+        <h3>VERIFY</h3>
+        <p>Open checklist for an upcoming viewing</p>
+    </a>
+</div>
+
+<section id="upcoming" class="upcoming-section">
+    <h2>Your viewings</h2>
+    {% if upcoming %}
+        <div class="request-list">
+            {% for r in upcoming %}
+            <div class="request-card">
+                <div class="request-main">
+                    <div class="request-location">📍 {{ r.location }}</div>
+                    <div class="request-meta">{{ r.date }} · {{ r.time }} · {{ r.reward }} PLN</div>
+                    {% if r.buddy_name %}
+                        <div class="request-buddy">Buddy: <strong>{{ r.buddy_name }}</strong> ✓</div>
+                    {% else %}
+                        <div class="request-buddy pending">Waiting for match...</div>
+                    {% endif %}
+                </div>
+                <div class="request-actions">
+                    <span class="status-badge status-{{ r.status }}">{{ r.status }}</span>
+                    {% if r.status == 'matched' %}
+                        <a href="{{ url_for('verify', request_id=r.id) }}" class="btn-small primary">Open checklist</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No viewings yet. Request a buddy to get started!</p>
+            <a href="{{ url_for('buddy') }}" class="btn primary">Find a Buddy</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

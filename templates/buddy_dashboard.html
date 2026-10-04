@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Buddy Dashboard{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>Hi {{ user.name }} 👋</h1>
+    <div class="buddy-profile-summary">
+        <span class="badge verified">✓ Verified</span>
+        <span class="badge rating">⭐ {{ user.rating }}</span>
+        <span>{{ user.completed_viewings }} viewings</span>
+        <span>{{ user.attendance_rate }}% attendance</span>
+        <span>📍 {{ user.neighborhood }}</span>
+    </div>
+</div>
+
+<section class="open-requests">
+    <h2>Available nearby requests</h2>
+    {% if open_requests %}
+        <div class="request-list">
+            {% for r in open_requests %}
+            <div class="request-card">
+                <div class="request-main">
+                    <div class="request-location">📍 {{ r.location }}</div>
+                    <div class="request-meta">{{ r.date }} · {{ r.time }} · ~{{ r.duration }} min</div>
+                    <div class="request-reward">💰 {{ r.reward }} PLN</div>
+                    {% if r.notes %}<div class="request-notes">{{ r.notes }}</div>{% endif %}
+                </div>
+                <div class="request-actions">
+                    <form method="POST" action="{{ url_for('accept_request', request_id=r.id) }}">
+                        <button type="submit" class="btn primary">Accept</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No open requests right now. Check back soon!</p>
+        </div>
+    {% endif %}
+</section>
+
+<section class="my-matches">
+    <h2>Your confirmed viewings</h2>
+    {% if matches %}
+        <div class="request-list">
+            {% for m in matches %}
+            <div class="request-card">
+                <div class="request-main">
+                    <div class="request-location">📍 {{ m.location }}</div>
+                    <div class="request-meta">{{ m.date }} · {{ m.time }} · {{ m.reward }} PLN</div>
+                    <div class="request-buddy">Helping: {{ m.renter_name }}</div>
+                </div>
+                <div class="request-actions">
+                    <span class="status-badge status-{{ m.status }}">{{ m.status }}</span>
+                    <a href="{{ url_for('verify', request_id=m.request_id) }}" class="btn-small primary">Open checklist</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>No confirmed viewings yet.</p>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

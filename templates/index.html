@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}RentFlock{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>Don't rent alone.</h1>
+        <p class="hero-sub">A real-time network connecting renters with verified local help.</p>
+        <div class="hero-actions">
+            <a href="{{ url_for('check') }}" class="btn primary large">CHECK A LISTING</a>
+            <a href="{{ url_for('buddy') if user else url_for('demo_login', role='renter') }}" class="btn secondary large">FIND A BUDDY</a>
+            <a href="{{ url_for('dashboard') if user else url_for('demo_login', role='renter') }}" class="btn outline large">VERIFY</a>
+        </div>
+    </div>
+    <div class="hero-visual">
+        <div class="connect-graphic">
+            <div class="person person-left">👤</div>
+            <div class="connection-line"></div>
+            <div class="person person-right">👤</div>
+        </div>
+        <p class="visual-caption">Someone nearby + Someone who needs help = Match</p>
+    </div>
+</section>
+
+<section class="features">
+    <div class="feature-card">
+        <div class="feature-icon check">🔍</div>
+        <h3>CHECK</h3>
+        <p>AI-assisted listing review. Spot red flags before you go.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon buddy">🤝</div>
+        <h3>BUDDY</h3>
+        <p>Get a verified local person to come with you. Real-time matching.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-icon verify">✅</div>
+        <h3>VERIFY</h3>
+        <p>Interactive checklist. Know what to check before you sign.</p>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <h2>How it works</h2>
+    <div class="steps">
+        <div class="step">
+            <span class="step-num">1</span>
+            <p>Paste a listing → get risk overview</p>
+        </div>
+        <div class="step">
+            <span class="step-num">2</span>
+            <p>Request a buddy for a specific time & place</p>
+        </div>
+        <div class="step">
+            <span class="step-num">3</span>
+            <p>Match with a verified local helper</p>
+        </div>
+        <div class="step">
+            <span class="step-num">4</span>
+            <p>Go together & use the checklist</p>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <h2>Ready to try?</h2>
+    <p>Jump in with a demo account — no signup needed.</p>
+    <div class="cta-buttons">
+        <a href="{{ url_for('demo_login', role='renter') }}" class="btn primary">Start as Renter</a>
+        <a href="{{ url_for('demo_login', role='buddy') }}" class="btn secondary">Start as Buddy</a>
+    </div>
+</section>
+{% endblock %}

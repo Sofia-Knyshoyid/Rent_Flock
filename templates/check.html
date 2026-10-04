@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Check Listing{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>CHECK</h1>
+    <p>Paste a rental listing. Get an AI-assisted risk overview.</p>
+</div>
+
+<div class="check-layout">
+    <form method="POST" class="check-form">
+        <div class="form-group">
+            <label for="listing_text">Rental listing text</label>
+            <textarea id="listing_text" name="listing_text" rows="12" placeholder="Paste the full listing here...&#10;&#10;Example:&#10;Beautiful studio in Kraków, Krowodrza. Only 1800 PLN! Urgent – deposit required today. Contact ASAP...">{{ listing_text }}</textarea>
+        </div>
+        <button type="submit" class="btn primary large">Analyze listing</button>
+    </form>
+
+    {% if result %}
+    <div class="analysis-result">
+        <div class="risk-header risk-{{ result.risk_level }}">
+            <span class="risk-label">Risk level: {{ result.risk_level | upper }}</span>
+            <p>{{ result.summary }}</p>
+        </div>
+
+        <div class="flags-section">
+            <h3>Things worth investigating</h3>
+            {% for flag in result.flags %}
+            <div class="flag-card severity-{{ flag.severity }}">
+                <div class="flag-title">
+                    {% if flag.severity == 'critical' %}🔴
+                    {% elif flag.severity == 'warning' %}🟡
+                    {% else %}🔵{% endif %}
+                    {{ flag.title }}
+                </div>
+                <p>{{ flag.detail }}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="questions-section">
+            <h3>Questions to ask</h3>
+            <ul class="questions-list">
+                {% for q in result.questions %}
+                <li>{{ q }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <div class="next-step">
+            <p>Ready for the next step?</p>
+            <a href="{{ url_for('buddy') if user else url_for('demo_login', role='renter') }}" class="btn secondary">Find a Buddy →</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
